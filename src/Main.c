@@ -3,6 +3,7 @@
 #define MAPSIZE		1024
 
 Sprite map;
+Sprite sky;
 float fWorldX;
 float fWorldY;
 float fWorldA;
@@ -11,28 +12,45 @@ float fFar;
 float fFoVHalf;
 
 void Setup(AlxWindow* w){
-	map = Sprite_New(MAPSIZE,MAPSIZE);
-	memset(map.img,0,sizeof(Pixel) * MAPSIZE * MAPSIZE);
-
-	fWorldX = 0.0f;
-	fWorldY = 0.0f;
-	fWorldA = 0.0f;
-	
-	fNear = 0.0f;
-	fFar = 0.0f;
+	fWorldX = 1000.0f;
+	fWorldY = 1000.0f;
+	fWorldA = 0.1f;
+	fNear = 0.005f;
+	fFar = 0.03f;
 	fFoVHalf = F32_PI / 4.0f;
 
-	for(int i = 0;i<MAPSIZE;i+=32){
-		for(int j = 0;j<MAPSIZE;j+=1){
-			Sprite_Set(&map,i,j,MAGENTA);
-			Sprite_Set(&map,i - 1,j,MAGENTA);
-			Sprite_Set(&map,i + 1,j,MAGENTA);
+	map = Sprite_Load("./assets/Ground.png");
+	sky = Sprite_Load("./assets/Sky.png");
 
-			Sprite_Set(&map,j,i,BLUE);
-			Sprite_Set(&map,j - 1,i,BLUE);
-			Sprite_Set(&map,j + 1,i,BLUE);
-		}
-	}
+	// map = Sprite_New(MAPSIZE,MAPSIZE);
+	// Memset_i32(map.img,BLACK,MAPSIZE * MAPSIZE);
+
+	// for(int i = 0;i<MAPSIZE;i+=32){
+	// 	for(int j = 0;j<MAPSIZE;j+=1){
+	// 		Sprite_Set(&map,i,j,MAGENTA);
+	// 		Sprite_Set(&map,i - 1,j,MAGENTA);
+	// 		Sprite_Set(&map,i + 1,j,MAGENTA);
+
+	// 		Sprite_Set(&map,j,i,BLUE);
+	// 		Sprite_Set(&map,j - 1,i,BLUE);
+	// 		Sprite_Set(&map,j + 1,i,BLUE);
+	// 	}
+	// }
+
+	// sky = Sprite_New(MAPSIZE,MAPSIZE);
+	// Memset_i32(sky.img,BLACK,MAPSIZE * MAPSIZE);
+
+	// for(int i = 0;i<MAPSIZE;i+=32){
+	// 	for(int j = 0;j<MAPSIZE;j+=1){
+	// 		Sprite_Set(&sky,i,j,LIGHT_BLUE);
+	// 		Sprite_Set(&sky,i - 1,j,LIGHT_BLUE);
+	// 		Sprite_Set(&sky,i + 1,j,LIGHT_BLUE);
+
+	// 		Sprite_Set(&sky,j,i,DARK_BLUE);
+	// 		Sprite_Set(&sky,j - 1,i,DARK_BLUE);
+	// 		Sprite_Set(&sky,j + 1,i,DARK_BLUE);
+	// 	}
+	// }
 }
 void Update(AlxWindow* w){
 	
@@ -52,41 +70,41 @@ void Update(AlxWindow* w){
 	float fNearX2 = fWorldX + cosf(fWorldA + fFoVHalf) * fNear;
 	float fNearY2 = fWorldY + sinf(fWorldA + fFoVHalf) * fNear;
 	
-	for (int y = 0; y < ScreenHeight() / 2; y++){
-		float fSampleDepth = (float)y / ((float)ScreenHeight() / 2.0f);		
+	for (int y = 0; y < GetHeight() / 2; y++){
+		float fSampleDepth = (float)y / ((float)GetHeight() / 2.0f);		
 		
 		float fStartX = (fFarX1 - fNearX1) / (fSampleDepth) + fNearX1;
 		float fStartY = (fFarY1 - fNearY1) / (fSampleDepth) + fNearY1;
 		float fEndX = (fFarX2 - fNearX2) / (fSampleDepth) + fNearX2;
 		float fEndY = (fFarY2 - fNearY2) / (fSampleDepth) + fNearY2;
 		
-		for (int x = 0; x < ScreenWidth(); x++){
-			float fSampleWidth = (float)x / (float)ScreenWidth();
+		for (int x = 0; x < GetWidth(); x++){
+			float fSampleWidth = (float)x / (float)GetWidth();
 			float fSampleX = (fEndX - fStartX) * fSampleWidth + fStartX;
 			float fSampleY = (fEndY - fStartY) * fSampleWidth + fStartY;
 			
 			fSampleX = fmod(fSampleX, 1.0f);
 			fSampleY = fmod(fSampleY, 1.0f);
 			
-			Pixel colground = Sprite_Get(&map,fSampleX,fSampleY);
-			RenderPixel(x, y + (ScreenHeight() / 2), colground);		
+			Pixel colground = Sprite_Sample(&map,fSampleX,fSampleY);
+			RenderPixel(x, y + (GetHeight() / 2), colground);		
 			
-			//Pixel colsky = Sprite_Get(&sky,fSampleX,fSampleY);
-			//RenderPixel(x, (ScreenHeight() / 2) - y, colsky);
+			Pixel colsky = Sprite_Sample(&sky,fSampleX,fSampleY);
+			RenderPixel(x, (GetHeight() / 2) - y, colsky);
 		}
 	}
+
 	RenderLine(((Vec2){ 0,(float)GetHeight() / 2.0f }),((Vec2){ (float)GetWidth(),(float)GetHeight() / 2 }),CYAN,1.0f);
+	
 	if (Stroke(ALX_KEY_LEFT).DOWN)
-		fWorldA -= 1.0f * w->ElapsedTime;
+		fWorldA -= 4.0f * w->ElapsedTime;
 	if (Stroke(ALX_KEY_RIGHT).DOWN)
-		fWorldA += 1.0f * w->ElapsedTime;
-	if (Stroke(ALX_KEY_UP).DOWN)
-	{
+		fWorldA += 4.0f * w->ElapsedTime;
+	if (Stroke(ALX_KEY_UP).DOWN){
 		fWorldX += cosf(fWorldA) * 0.2f * w->ElapsedTime;
 		fWorldY += sinf(fWorldA) * 0.2f * w->ElapsedTime;
 	}
-	if (Stroke(ALX_KEY_DOWN).DOWN)
-	{
+	if (Stroke(ALX_KEY_DOWN).DOWN){
 		fWorldX -= cosf(fWorldA) * 0.2f * w->ElapsedTime;
 		fWorldY -= sinf(fWorldA) * 0.2f * w->ElapsedTime;
 	}
@@ -97,11 +115,11 @@ void Update(AlxWindow* w){
 }
 void Delete(AlxWindow* w){
 	Sprite_Free(&map);
-	//Sprite_Free(&sky);
+	Sprite_Free(&sky);
 }
 
 int main(){
-    if(Create("Mode7",320,240,4,4,Setup,Update,Delete))
+    if(Create("Mode7",320,240,2,2,Setup,Update,Delete))
         Start();
     return 0;
 }
