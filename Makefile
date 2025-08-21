@@ -1,6 +1,6 @@
 CC = gcc
 #CFLAGS = -Wall -Wextra -std=c11 -O2 -g -mavx2
-CFLAGS = -Ofast -mavx2 -funroll-loops -fpeel-loops -funswitch-loops -fpredictive-commoning -ftree-vectorize	-fweb -frename-registers -flto -fomit-frame-pointer
+CFLAGS = -O2 -mavx2
 INCLUDES = -Isrc
 LDFLAGS = -lm -lX11 -lpng
 
